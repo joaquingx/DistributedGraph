@@ -22,6 +22,7 @@ struct Master
   int fdmax;        // maximum file descriptor number
   int listener ,  newfd;
   int yes=1;
+  int cntPeers=0,activePeers=0;
   Master(char * ipAddr, char * portListener);
   void processing();
   bool newConnection();
@@ -29,6 +30,14 @@ struct Master
   bool recvSomething(int i);
   int linkWithSocket( char * ipAddr, char* port);
   void echoSomething();
+  void controlMaster();
+  int fstHashFunction(int actualAdjacency,int stationNumbers);
+  int sndHashFunction(int actualAdjacency, int stationNumbers);
+  void openFile(char * path);
+  void echoSomething(char * buffer);
+  void distributeBetweenPeers(char * buffer);
+  void keepAlive();
+  void exitAll();
 };
 
 #endif

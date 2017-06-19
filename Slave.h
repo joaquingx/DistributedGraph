@@ -16,15 +16,19 @@
 
 struct Slave
 {
-  int yes = 1 , listener, sender ;
+  int yes = 1 , socketfd;
   char PORTLISTENER[100],PORTSENDER[100], IP_ADDR[100];
-  bigramList myPart;
-  Slave(char * ipAddr, char * portListener, char * portSender);
+  bigramList adjList;
+  Slave(char * ipAddr,  char * portSender);
   int linkWithSocket( char * ipAddr, char* port);
   void connectWithSocket(char * ipAddr, char * port, int & sockfd);
   void sendSomething();
   void recvSomething();
   void processing();
+  void printEcho(string opciones);
+  void recvEdge(string buffer);
+  void printEdges();
+
 };
 
 

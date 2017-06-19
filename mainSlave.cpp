@@ -5,7 +5,7 @@ using namespace std;
 
 int main(int argc, char * argv[])
 {
-  Slave estacion(argv[1],argv[2],argv[3]);
+  Slave estacion(argv[1],argv[2]);
   estacion.processing();
   return 0;
 }

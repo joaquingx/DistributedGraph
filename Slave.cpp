@@ -101,16 +101,11 @@ void Slave::connectWithSocket(char * ipAddr, char * port, int & sockfd)
 }
 
 
-Slave::Slave(char * ipAddr, char * portListener, char * portSender)
+Slave::Slave(char * ipAddr,  char * portSender)
 {
-  strcpy(this->PORTLISTENER,portListener);
   strcpy(this->PORTSENDER,portSender);
   strcpy(this->IP_ADDR, ipAddr);
-
-  cout << portListener << " " << portSender << "\n";
-  connectWithSocket(ipAddr,portSender, listener);
-  connectWithSocket(ipAddr,portSender,sender);
-  // listen
+  connectWithSocket(ipAddr,portSender, socketfd);
 }
 
 void Slave::sendSomething()
@@ -126,11 +121,34 @@ void Slave::sendSomething()
       strcpy(buffer,argument.c_str());
       if(opciones[idxOpcion+1] == 'S') // Send Something
         {
-          if (send(sender, buffer, 100, 0) == -1)
+          if (send(socketfd, buffer, 100, 0) == -1)
             perror("send\n");
         }
       cout << "Mandado!\n";
     }
+}
+
+void Slave::printEcho(string opciones)
+{
+  cout << getArgument(opciones) << "\n";
+}
+void Slave::recvEdge(string buffer)
+{
+  cout << "recibi esto : "<<buffer << "\n";
+  buffer = getArgument(buffer);
+  string fstWord,sndWord;
+  int i;
+  for(i = 0 ; buffer[i] != ' ' ; ++i)
+    fstWord += buffer[i];
+  for(i = i + 1 ; buffer[i] != 10 ; ++i)
+    sndWord += buffer[i];
+  adjList[fstWord].insert(sndWord);
+  adjList[sndWord].insert(fstWord);
+}
+
+void Slave::printEdges()
+{
+  printBigramList(adjList);
 }
 
 void Slave::recvSomething()
@@ -140,24 +158,35 @@ void Slave::recvSomething()
       char buf[256];    // buffer for client data
       int nbytes;
       // handle data from a client
-      if ((nbytes = recv(listener, buf, sizeof buf, 0)) <= 0) // se fue
+      if ((nbytes = recv(socketfd, buf, sizeof buf, 0)) <= 0) // se fue
         {
           // got error or connection closed by client
           if (nbytes == 0)
             {
               // connection closed
-              printf("selectserver: socket %d hung up\n", listener);
+              printf("selectserver: socket %d hung up\n", socketfd);
             }
           else
             {
               perror("recv:::::");
             }
-          // close(listener); // bye!
+          // close(socketfd); // bye!
         }
       else
         {
-          // Hacer el procesamiento aca
-          cout << "Recibi : "<< buf << "\n";
+          string opciones(buf);
+          char switcher = getOption(buf);
+          switch(switcher)
+            {
+            case 'S':
+              printEcho(opciones);
+              break;
+            case 'I': //Insertar Artistas
+              recvEdge(opciones);
+              break;
+            case 'P': // Imprimir Aristas
+              printEdges();
+            }
         }
     }
 }

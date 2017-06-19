@@ -16,10 +16,9 @@ using namespace std;
 typedef unsigned char uchar;
 typedef map<string , set<string>  > bigramList;
 
-bigramList openFile(char * path);
+char getOption(string s);
+string getArgument(string s);
 void printBigramList(bigramList mp);
-int fstHashFunction(int actualAdjacency,int stationNumbers);
-int sndHashFunction(int actualAdjacency, int stationNumbers);
 void getInfo(struct sockaddr sa);
 void *get_in_addr(struct sockaddr *sa);
 #endif

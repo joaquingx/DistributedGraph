@@ -5,43 +5,160 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <time.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <iostream>
 #include <thread>
 #include "Master.h"
 #include "auxiliar.h"
+#define INITIAL 4
 
-void Master::echoSomething()
+
+int Master::fstHashFunction(int actualAdjacency,int stationNumbers)
 {
-  while(1)
+  return (actualAdjacency % stationNumbers);
+}
+
+int Master::sndHashFunction(int actualAdjacency, int stationNumbers)
+{
+  return ( (actualAdjacency+13) % stationNumbers);
+}
+
+void Master::openFile(char * path)
+{
+  int cnt = 0 ;
+  bool isValid;
+  FILE * pFile;
+  char buffer [MAXN];
+  pFile = fopen (path , "r");
+  if (pFile == NULL) perror ("Error opening file");
+  else
     {
-      string opciones;
-      getline(cin,opciones);
-      int idxOpcion = opciones.find("-");
-      int idxArgument = opciones.find(" ");
-      string argument = opciones.substr(idxArgument+1);
-      char buffer[100];
-      strcpy(buffer,argument.c_str());
-      if(opciones[idxOpcion+1] == 'S') // Send Something
+      while ( ! feof (pFile) )
         {
-          for(int j = 0; j <= fdmax; j++)
+          ++cnt;
+          if(cnt > MAXELEMENTS)
             {
-              // send to everyone!
-              if (FD_ISSET(j, &master))
+              break;
+            }
+          isValid=1;
+          if ( fgets (buffer , MAXN , pFile) == NULL ) break;
+          for(int i = 0 ; buffer[i] != 0 ; ++i )
+            {
+              if(int(uchar(buffer[i])) > 127)
                 {
-                  // except the listener and ourselves
-                  if  (j != listener)
+                  isValid=0;
+                  break;
+                }
+            }
+          if(isValid)
+            {
+              string msg = "-I ";
+              msg += string(buffer);
+              int getStation = fstHashFunction(cnt,cntPeers)+INITIAL;
+              int getReplication = sndHashFunction(cnt,cntPeers)+INITIAL;
+              cout << getStation << " " << getReplication << " " << msg  << "\n";
+              if (send(getStation, (char*)msg.c_str() , MAXN, 0) == -1)
+                {
+                  perror("send");
+                }
+              if(getStation != getReplication)
+                {
+                  if (send(getReplication, (char*)msg.c_str() , MAXN, 0) == -1)
                     {
-                      if (send(j, buffer, 100, 0) == -1)
-                        {
-                          perror("send");
-                        }
+                      perror("send");
                     }
+                }
+              sleep(0.5); // ??? How to overcome?????
+            }
+        }
+      fclose (pFile);
+    }
+}
+
+void Master::echoSomething(char * buffer)
+{
+  for(int j = 0; j <= fdmax; j++)
+    {
+      // send to everyone!
+      if (FD_ISSET(j, &master))
+        {
+          ++activePeers;
+          // except the listener and ourselves
+          if  (j != listener)
+            {
+              if (send(j, buffer, 100, 0) == -1)
+                {
+                  perror("send");
                 }
             }
         }
-      cout << "Mandado!\n";
+    }
+}
+
+void Master::distributeBetweenPeers(char * buffer)
+{
+  string nuevo(buffer);
+  openFile((char*)getArgument(buffer).c_str());
+}
+
+
+void Master::keepAlive()
+{
+  string kipi = "-S You are alive! Great!";
+  time_t secondsPast = time(NULL),secondsNow;
+  while(1)
+    {
+      secondsNow = time(NULL);
+      if(secondsNow - secondsPast > 60)
+        {
+          secondsPast = secondsNow;
+          activePeers = 0;
+          echoSomething( (char*)kipi.c_str());
+          cntPeers = activePeers;
+          cout << "Keep Alive Detects " << activePeers << " stations active\n";
+        }
+    }
+}
+
+void Master::exitAll()
+{
+  read_fds = master; // copy it
+  if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1)
+    {
+      perror("select");
+      exit(4);
+    }
+  // run through the existing connections looking for data to read
+  for(int i = 0; i <= fdmax; i++)
+    {
+      if (FD_ISSET(i, &read_fds))
+        { // we got one!!
+          close(i); // bye!
+        } // END got new incoming connection
+    } // END looping through file descriptors
+}
+
+void Master::controlMaster()
+{
+  while(1)
+    {
+      char buffer[100];
+      string opciones;
+      getline(cin,opciones);
+      strcpy(buffer,opciones.c_str());
+      char switchter = getOption(opciones);
+      switch(switchter)
+        {
+        case 'D':
+          distributeBetweenPeers(buffer);
+          break;
+        case 'E':
+          exitAll();
+        default:
+          echoSomething(buffer);
+        }
     }
 }
 
@@ -132,6 +249,7 @@ bool Master::newConnection()
         {    // keep track of the max
           fdmax = newfd;
         }
+      ++cntPeers;
       printf("selectserver: new connection from %s on "
              "socket %d\n",
              inet_ntop(remoteaddr.ss_family,
@@ -161,6 +279,7 @@ bool Master::recvSomething(int i)
           perror("recv:");
         }
       close(i); // bye!
+      --cntPeers;
       FD_CLR(i, &master); // remove from master set
     }
   else
@@ -195,7 +314,8 @@ void Master::processing()
   //aux variables
   int i, j, rv;
   // aux variables
-  thread control(&Master::echoSomething,this);
+  thread control(&Master::controlMaster,this);
+  thread kipilivi(&Master::keepAlive,this);
   for(;;) {
     read_fds = master; // copy it
     if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1)
@@ -216,4 +336,5 @@ void Master::processing()
       } // END looping through file descriptors
   } // END for(;;)--and you thought it would never end!
   control.join();
+  kipilivi.join();
 }
