@@ -140,6 +140,13 @@ void Master::exitAll()
     } // END looping through file descriptors
 }
 
+void Master::printInfo()
+{
+  cout << "We have " << cntPeers << " active Peers\n";
+  getInfo((*myInfo));
+  getProtocol();
+}
+
 void Master::controlMaster()
 {
   while(1)
@@ -149,6 +156,7 @@ void Master::controlMaster()
       getline(cin,opciones);
       strcpy(buffer,opciones.c_str());
       char switchter = getOption(opciones);
+      printLines();
       switch(switchter)
         {
         case 'D':
@@ -156,9 +164,13 @@ void Master::controlMaster()
           break;
         case 'E':
           exitAll();
+          break;
+        case 'C':
+          printInfo();
         default:
           echoSomething(buffer);
         }
+      printLines();
     }
 }
 
@@ -183,8 +195,7 @@ int Master::linkWithSocket( char * ipAddr, char* port)
     if (socketName < 0) {
       continue;
     }
-    struct sockaddr * ipv4 = p->ai_addr;
-    getInfo((*ipv4));
+    myInfo = p->ai_addr;
     // lose the pesky "address already in use" error message
     setsockopt(socketName, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
@@ -303,6 +314,14 @@ bool Master::recvSomething(int i)
         }
     }
   return 1;
+}
+
+void depthSearch(int falta , map<string , int > mark , set<string>  & rpta)
+{
+  if(falta == 1)
+    {
+      // if(!mark[])
+    }
 }
 
 bool Master::sendSomething()

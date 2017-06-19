@@ -19,6 +19,7 @@ struct Slave
   int yes = 1 , socketfd;
   char PORTLISTENER[100],PORTSENDER[100], IP_ADDR[100];
   bigramList adjList;
+  struct sockaddr * myInfo;
   Slave(char * ipAddr,  char * portSender);
   int linkWithSocket( char * ipAddr, char* port);
   void connectWithSocket(char * ipAddr, char * port, int & sockfd);
@@ -28,7 +29,7 @@ struct Slave
   void printEcho(string opciones);
   void recvEdge(string buffer);
   void printEdges();
-
+  void printInfo();
 };
 
 

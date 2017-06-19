@@ -37,10 +37,20 @@ void getInfo(struct sockaddr sa)
 {
   char host[1024] , service[20];
   getnameinfo(&sa, sizeof sa, host, sizeof host, service, sizeof service, 0);
-  printf("host: %s\n", host);    // e.g. "www.example.com"
-  printf("service: %s\n", service); // e.g. "http"
+  printf("Host: %s\n", host);    // e.g. "www.example.com"
+  printf("Port: %s\n", service); // e.g. "http"
 }
 
+
+void getProtocol()
+{
+  cout << "Usage: \n";
+  cout << "-S Argument : Echo Argument on all peers\n";
+  cout << "-D Argument : Distribute the argument among peers\n";
+  cout << "-I Argument : Insert Bigram in Graph\n";
+  cout << "-P : Print Adjacency List on all peers\n";
+  cout << "-C : Get this page\n";
+}
 
 char getOption(string s)
 {
@@ -50,4 +60,10 @@ char getOption(string s)
 string getArgument(string s)
 {
   return  s.substr(s.find(" ") + 1);
+}
+
+void printLines()
+{
+  cout << "------------------------------------------------\n";
+  cout << "------------------------------------------------\n";
 }

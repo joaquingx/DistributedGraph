@@ -23,6 +23,7 @@ struct Master
   int listener ,  newfd;
   int yes=1;
   int cntPeers=0,activePeers=0;
+  struct sockaddr * myInfo;
   Master(char * ipAddr, char * portListener);
   void processing();
   bool newConnection();
@@ -37,7 +38,9 @@ struct Master
   void echoSomething(char * buffer);
   void distributeBetweenPeers(char * buffer);
   void keepAlive();
+  vector<string> depthSearch(int falta , map<string , int > mark );
   void exitAll();
+  void printInfo();
 };
 
 #endif

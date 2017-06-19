@@ -78,6 +78,7 @@ void Slave::connectWithSocket(char * ipAddr, char * port, int & sockfd)
       perror("client: socket");
       continue;
     }
+    myInfo = p->ai_addr;
 
     if ( (connect(sockfd, p->ai_addr, p->ai_addrlen)) == -1) {
       close(sockfd);
@@ -140,7 +141,7 @@ void Slave::recvEdge(string buffer)
   int i;
   for(i = 0 ; buffer[i] != ' ' ; ++i)
     fstWord += buffer[i];
-  for(i = i + 1 ; buffer[i] != 10 ; ++i)
+  for(i = i + 1 ; buffer[i] != 10 and buffer[i] != '\0'; ++i)
     sndWord += buffer[i];
   adjList[fstWord].insert(sndWord);
   adjList[sndWord].insert(fstWord);
@@ -149,6 +150,12 @@ void Slave::recvEdge(string buffer)
 void Slave::printEdges()
 {
   printBigramList(adjList);
+}
+
+void Slave::printInfo()
+{
+  getInfo((*myInfo));
+  cout << "Nodos almacenados: " << adjList.size() << "\n";
 }
 
 void Slave::recvSomething()
@@ -179,13 +186,23 @@ void Slave::recvSomething()
           switch(switcher)
             {
             case 'S':
+              printLines();
               printEcho(opciones);
+              printLines();
               break;
             case 'I': //Insertar Artistas
               recvEdge(opciones);
               break;
             case 'P': // Imprimir Aristas
+              printLines();
               printEdges();
+              printLines();
+              break;
+            case 'C':
+              printLines();
+              printInfo();
+              printLines();
+              break;
             }
         }
     }
@@ -197,3 +214,4 @@ void Slave::processing()
   controlSend.join();
   controlRcv.join();
 }
+

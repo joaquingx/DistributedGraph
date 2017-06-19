@@ -20,5 +20,7 @@ char getOption(string s);
 string getArgument(string s);
 void printBigramList(bigramList mp);
 void getInfo(struct sockaddr sa);
+void getProtocol();
 void *get_in_addr(struct sockaddr *sa);
+void printLines();
 #endif
