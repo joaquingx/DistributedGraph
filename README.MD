@@ -7,15 +7,23 @@
   $ g++  -pthread auxiliar.cpp Slave.cpp mainSlave.cpp -o mainSlave.o  
 ```
 
+### Protocol
+**-S Argument** Echo on all peers.
+
+**-D Argument** Distribute file(argument) in all peers.
+
+**-I Argument** Insert Bigram(argument).
+
+**-P** Print Adjacency List on all peers.
+
 ### Example
 ```sh
   $ ./mainMaster.o
   $ -S Hola!
-  $ Mandado!
+  $ -D prueba.txt
+  $ -I chiclayo peru
+  $ -P
 ```
 ```sh
-  $ ./mainSlave.o 127.0.0.1 9040 9034
-  $ -S Hola!
-  $ Mandado!
-  $ Recibi : Hola!
+  $ ./mainSlave.o 127.0.0.1 9034
 ```
