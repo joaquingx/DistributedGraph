@@ -58,7 +58,7 @@ void Master::openFile(char * path)
               msg += string(buffer);
               int getStation = fstHashFunction(cnt,cntPeers)+INITIAL;
               int getReplication = sndHashFunction(cnt,cntPeers)+INITIAL;
-              cout << getStation << " " << getReplication << " " << msg  << "\n";
+              // cout << getStation << " " << getReplication << " " << msg  << "\n";
               if (send(getStation, (char*)msg.c_str() , MAXN, 0) == -1)
                 {
                   perror("send");
@@ -296,7 +296,7 @@ bool Master::recvSomething(int i)
                 {
                   if (send(j, buf, nbytes, 0) == -1)
                     {
-                      perror("send");
+                      perror("send mesg");
                     }
                 }
             }

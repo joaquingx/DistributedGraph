@@ -134,7 +134,7 @@ void Slave::printEcho(string opciones)
 }
 void Slave::recvEdge(string buffer)
 {
-  cout << "recibi esto : "<<buffer << "\n";
+  // cout << "recibi esto : "<<buffer << "\n";
   buffer = getArgument(buffer);
   string fstWord,sndWord;
   int i;
