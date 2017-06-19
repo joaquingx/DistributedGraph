@@ -1,7 +1,3 @@
-/*
-** selectserver.c -- a cheezy multiperson chat server
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,11 +8,10 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <iostream>
+#include "auxiliar.h"
 using namespace std;
 
-// #define PORT "9034"   // port we're listening on
 
-// get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
   if (sa->sa_family == AF_INET) {
@@ -26,9 +21,11 @@ void *get_in_addr(struct sockaddr *sa)
   return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+
+
 int main(void)
 {
-  int PORT; cin >> PORT;
+  char PORT[100]; cin>> PORT;
   fd_set master;    // master file descriptor list
   fd_set read_fds;  // temp file descriptor list for select()
   int fdmax;        // maximum file descriptor number
@@ -55,8 +52,8 @@ int main(void)
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
-  if ((rv = getaddrinfo(NULL, (char *)PORT, &hints, &ai)) != 0) {
+  // hints.ai_flags = AI_PASSIVE;
+  if ((rv = getaddrinfo("192.168.0.3", (char *)PORT, &hints, &ai)) != 0) {
     fprintf(stderr, "selectserver: %s\n", gai_strerror(rv));
     exit(1);
   }
@@ -66,7 +63,8 @@ int main(void)
     if (listener < 0) {
       continue;
     }
-
+    struct sockaddr * ipv4 = p->ai_addr;
+    getInfo((*ipv4));
     // lose the pesky "address already in use" error message
     setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
