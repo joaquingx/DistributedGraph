@@ -158,6 +158,27 @@ void Slave::printInfo()
   cout << "Nodos almacenados: " << adjList.size() << "\n";
 }
 
+void Slave::sendRedundancy(string opciones)
+{
+  string arg = getArgument(opciones), stOk,stError;
+  stOk = "-R " + arg;
+  stError = "-R -1" ;
+  char bufOk[100],bufError[100];
+  strcpy(bufOk,stOk.c_str());
+  strcpy(bufError,stError.c_str());
+  if(adjList.count(arg))
+    {
+      if (send(socketfd, bufOk, 100, 0) == -1)
+        perror("send\n");
+    }
+  else
+    {
+      if (send(socketfd, bufError, 100, 0) == -1)
+        perror("send\n");
+    }
+
+}
+
 void Slave::recvSomething()
 {
   while(1)
@@ -203,6 +224,8 @@ void Slave::recvSomething()
               printInfo();
               printLines();
               break;
+            case 'R':
+              sendRedundancy(opciones);
             }
         }
     }
@@ -214,4 +237,3 @@ void Slave::processing()
   controlSend.join();
   controlRcv.join();
 }
-

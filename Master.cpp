@@ -149,10 +149,11 @@ void Master::printInfo()
 
 void Master::controlMaster()
 {
+  string opciones;
   while(1)
     {
+      // if(cntRedundancy == getArgument(opciones))
       char buffer[100];
-      string opciones;
       getline(cin,opciones);
       strcpy(buffer,opciones.c_str());
       char switchter = getOption(opciones);
@@ -164,6 +165,14 @@ void Master::controlMaster()
           break;
         case 'E':
           exitAll();
+          break;
+        case 'R':
+          cntRedundancy = 0;
+          redundancyMap[getArgument(opciones)] = 0;
+          echoSomething(buffer);
+          cout << "Calculating...\n";
+          sleep(1.0);
+          cout << "Redundancy of " << getArgument(opciones) << ": " << redundancyMap[getArgument(opciones)] << " \n";
           break;
         case 'C':
           printInfo();
@@ -271,6 +280,39 @@ bool Master::newConnection()
   return 1;
 }
 
+void Master::getRedundancy(string buffer)
+{
+  string nodo = getArgument(buffer);
+  // cout << nodo << "<-\n";
+  if(nodo != "-1")
+    {
+      ++redundancyMap[nodo];
+    }
+}
+
+
+void Master::recvControl(char * buffer)
+{
+  string opciones(buffer);
+  strcpy(buffer,opciones.c_str());
+  char switchter = getOption(opciones);
+  switch(switchter)
+    {
+    case 'R':
+      getRedundancy(opciones);
+      // cout << cntRedundancy << "\n";
+      ++cntRedundancy;
+      break;
+      // case 'E':
+      //   exitAll();
+      //   break;
+      // case 'C':
+      //   printInfo();
+    default:
+      echoSomething(buffer);
+    }
+}
+
 bool Master::recvSomething(int i)
 {
   char buf[256];    // buffer for client data
@@ -295,23 +337,24 @@ bool Master::recvSomething(int i)
     }
   else
     {
-      cout << buf << "\n";
-      // we got some data from a client
-      for(int j = 0; j <= fdmax; j++)
-        {
-          // send to everyone!
-          if (FD_ISSET(j, &master))
-            {
-              // except the listener and ourselves
-              if  (j != listener && j != i )
-                {
-                  if (send(j, buf, nbytes, 0) == -1)
-                    {
-                      perror("send mesg");
-                    }
-                }
-            }
-        }
+      recvControl(buf);
+      // cout << buf << "\n";
+      // // we got some data from a client
+      // for(int j = 0; j <= fdmax; j++)
+      //   {
+      //     // send to everyone!
+      //     if (FD_ISSET(j, &master))
+      //       {
+      //         // except the listener and ourselves
+      //         if  (j != listener && j != i )
+      //           {
+      //             if (send(j, buf, nbytes, 0) == -1)
+      //               {
+      //                 perror("send mesg");
+      //               }
+      //           }
+      //       }
+      //   }
     }
   return 1;
 }

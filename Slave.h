@@ -30,6 +30,7 @@ struct Slave
   void recvEdge(string buffer);
   void printEdges();
   void printInfo();
+  void sendRedundancy(string opciones);
 };
 
 

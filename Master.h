@@ -22,7 +22,8 @@ struct Master
   int fdmax;        // maximum file descriptor number
   int listener ,  newfd;
   int yes=1;
-  int cntPeers=0,activePeers=0;
+  int cntPeers=0,activePeers=0, cntRedundancy;
+  map<string , int > redundancyMap;
   struct sockaddr * myInfo;
   Master(char * ipAddr, char * portListener);
   void processing();
@@ -41,6 +42,8 @@ struct Master
   vector<string> depthSearch(int falta , map<string , int > mark );
   void exitAll();
   void printInfo();
+  void getRedundancy(string buffer);
+  void recvControl(char * buffer);
 };
 
 #endif
