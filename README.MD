@@ -18,7 +18,7 @@
 
 ### Example
 ```sh
-  $ ./mainMaster.o
+  $ ./mainMaster.o 127.0.0.1 9034
   $ -S Hola!
   $ -D prueba.txt
   $ -I chiclayo peru
