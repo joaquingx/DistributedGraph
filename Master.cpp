@@ -58,6 +58,7 @@ void Master::openFile(char * path)
               msg += string(buffer);
               int getStation = fstHashFunction(cnt,cntPeers)+INITIAL;
               int getReplication = sndHashFunction(cnt,cntPeers)+INITIAL;
+              cout << msg << "\n";
               // cout << getStation << " " << getReplication << " " << msg  << "\n";
               if (send(getStation, (char*)msg.c_str() , MAXN, 0) == -1)
                 {
@@ -100,7 +101,7 @@ void Master::echoSomething(char * buffer)
 void Master::distributeBetweenPeers(char * buffer)
 {
   string nuevo(buffer);
-  openFile((char*)getArgument(buffer).c_str());
+  openFile((char*)getArgument(buffer,1).c_str());
 }
 
 
@@ -147,6 +148,12 @@ void Master::printInfo()
   getProtocol();
 }
 
+
+void Master::getQuery(char * buffer)
+{
+  string opciones(buffer);
+
+}
 void Master::controlMaster()
 {
   string opciones;
@@ -156,7 +163,7 @@ void Master::controlMaster()
       char buffer[100];
       getline(cin,opciones);
       strcpy(buffer,opciones.c_str());
-      char switchter = getOption(opciones);
+      char switchter = getOption(opciones,1);
       printLines();
       switch(switchter)
         {
@@ -168,11 +175,14 @@ void Master::controlMaster()
           break;
         case 'R':
           cntRedundancy = 0;
-          redundancyMap[getArgument(opciones)] = 0;
+          redundancyMap[getArgument(opciones,1)] = 0;
           echoSomething(buffer);
           cout << "Calculating...\n";
           sleep(1.0);
-          cout << "Redundancy of " << getArgument(opciones) << ": " << redundancyMap[getArgument(opciones)] << " \n";
+          cout << "Redundancy of " << getArgument(opciones,1) << ": " << redundancyMap[getArgument(opciones,1)] << " \n";
+          break;
+        case 'Q':
+          getQuery(buffer);
           break;
         case 'C':
           printInfo();
@@ -282,7 +292,7 @@ bool Master::newConnection()
 
 void Master::getRedundancy(string buffer)
 {
-  string nodo = getArgument(buffer);
+  string nodo = getArgument(buffer,1);
   // cout << nodo << "<-\n";
   if(nodo != "-1")
     {
@@ -295,7 +305,7 @@ void Master::recvControl(char * buffer)
 {
   string opciones(buffer);
   strcpy(buffer,opciones.c_str());
-  char switchter = getOption(opciones);
+  char switchter = getOption(opciones,1);
   switch(switchter)
     {
     case 'R':

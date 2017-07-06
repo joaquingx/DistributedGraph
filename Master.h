@@ -26,6 +26,7 @@ struct Master
   map<string , int > redundancyMap;
   struct sockaddr * myInfo;
   Master(char * ipAddr, char * portListener);
+  void getQuery(char * buffer);
   void processing();
   bool newConnection();
   bool sendSomething();

@@ -131,18 +131,15 @@ void Slave::sendSomething()
 
 void Slave::printEcho(string opciones)
 {
-  cout << getArgument(opciones) << "\n";
+  cout << getArgument(opciones,1) << "\n";
 }
 void Slave::recvEdge(string buffer)
 {
-  // cout << "recibi esto : "<<buffer << "\n";
-  buffer = getArgument(buffer);
   string fstWord,sndWord;
-  int i;
-  for(i = 0 ; buffer[i] != ' ' ; ++i)
-    fstWord += buffer[i];
-  for(i = i + 1 ; buffer[i] != 10 and buffer[i] != '\0'; ++i)
-    sndWord += buffer[i];
+  fstWord = getArgument(buffer,1);
+  sndWord = getArgument(buffer,2);
+  fstWord = fstWord.substr(0,fstWord.size()-1);
+  cout << fstWord << " " << sndWord << "\n";
   adjList[fstWord].insert(sndWord);
   adjList[sndWord].insert(fstWord);
 }
@@ -160,7 +157,7 @@ void Slave::printInfo()
 
 void Slave::sendRedundancy(string opciones)
 {
-  string arg = getArgument(opciones), stOk,stError;
+  string arg = getArgument(opciones,1), stOk,stError;
   stOk = "-R " + arg;
   stError = "-R -1" ;
   char bufOk[100],bufError[100];
@@ -203,7 +200,7 @@ void Slave::recvSomething()
       else
         {
           string opciones(buf);
-          char switcher = getOption(buf);
+          char switcher = getOption(buf,1);
           switch(switcher)
             {
             case 'S':
@@ -223,6 +220,9 @@ void Slave::recvSomething()
               printLines();
               printInfo();
               printLines();
+              break;
+            case 'Q':
+
               break;
             case 'R':
               sendRedundancy(opciones);

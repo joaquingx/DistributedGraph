@@ -52,14 +52,32 @@ void getProtocol()
   cout << "-C : Get this page\n";
 }
 
-char getOption(string s)
+char getOption(string s, int cual)
 {
-  return s[s.find("-")+1];
+  string saved = s;
+  int pos = 0;
+  for(int i = 0 ; i < cual ; ++i)
+    {
+      pos = s.find("-") + 1;
+      s = s.substr(pos);
+    }
+  return saved[pos];
 }
 
-string getArgument(string s)
+string getArgument(string s, int cual)
 {
-  return  s.substr(s.find(" ") + 1);
+  reverse(s.begin(), s.end() );
+  int pos=0;
+  for(int i = 0 ; i < cual; ++i)
+    {
+      s = s.substr(pos);
+      pos = s.find(" ")+1;
+    }
+  pos--;
+  // cout << s << "\n";
+  // cout << pos << "\n";
+  reverse(s.begin(), s.end() );
+  return  s.substr(s.size()-pos);
 }
 
 void printLines()

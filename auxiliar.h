@@ -16,8 +16,8 @@ using namespace std;
 typedef unsigned char uchar;
 typedef map<string , set<string>  > bigramList;
 
-char getOption(string s);
-string getArgument(string s);
+char getOption(string s, int cual);
+string getArgument(string s, int cual);
 void printBigramList(bigramList mp);
 void getInfo(struct sockaddr sa);
 void getProtocol();
