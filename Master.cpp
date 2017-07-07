@@ -58,7 +58,7 @@ void Master::openFile(char * path)
               msg += string(buffer);
               int getStation = fstHashFunction(cnt,cntPeers)+INITIAL;
               int getReplication = sndHashFunction(cnt,cntPeers)+INITIAL;
-              cout << msg << "\n";
+              // cout << msg << "\n";
               // cout << getStation << " " << getReplication << " " << msg  << "\n";
               if (send(getStation, (char*)msg.c_str() , MAXN, 0) == -1)
                 {
@@ -117,8 +117,9 @@ void Master::keepAlive()
           secondsPast = secondsNow;
           activePeers = 0;
           echoSomething( (char*)kipi.c_str());
-          cntPeers = activePeers;
+          cntPeers = activePeers-1;
           cout << "Keep Alive Detects " << activePeers << " stations active\n";
+          cout << "Estadod el cntEnd: " << cntEnd << "\n";
         }
     }
 }
@@ -149,11 +150,11 @@ void Master::printInfo()
 }
 
 
-void Master::getQuery(char * buffer)
-{
-  string opciones(buffer);
+// void Master::printDebug()
+// {
 
-}
+// }
+
 void Master::controlMaster()
 {
   string opciones;
@@ -167,6 +168,8 @@ void Master::controlMaster()
       printLines();
       switch(switchter)
         {
+        // case '*':
+        //   printDebug();
         case 'D':
           distributeBetweenPeers(buffer);
           break;
@@ -174,15 +177,18 @@ void Master::controlMaster()
           exitAll();
           break;
         case 'R':
-          cntRedundancy = 0;
+          cntEnd = 0;
+          actualState = 1;
+          actualRedundancy = getArgument(opciones,1);
           redundancyMap[getArgument(opciones,1)] = 0;
           echoSomething(buffer);
-          cout << "Calculating...\n";
-          sleep(1.0);
-          cout << "Redundancy of " << getArgument(opciones,1) << ": " << redundancyMap[getArgument(opciones,1)] << " \n";
           break;
         case 'Q':
-          getQuery(buffer);
+          cntEnd = 0;
+          actualState = 2;
+          faltaQ = int(char(getArgument(opciones,2)[0])-'0');
+          adjacent.clear();
+          echoSomething(buffer);
           break;
         case 'C':
           printInfo();
@@ -225,7 +231,6 @@ int Master::linkWithSocket( char * ipAddr, char* port)
 
     break;
   }
-
   // if we got here, it means we didn't get bound
   if (p == NULL) {
     fprintf(stderr, "selectserver: failed to bind\n");
@@ -300,9 +305,36 @@ void Master::getRedundancy(string buffer)
     }
 }
 
+void Master::updateAdjacent(string buffer)
+{
+  string argument = getArgument(buffer,1);
+  adjacent.insert(argument);
+}
+
+
+void Master::stateControl()
+{
+  // opcion 1 redundancy
+  // opcion 2 depth
+  // opcion 3 sinonimos
+  switch(actualState)
+    {
+    case 1:
+      cout << "Redundancy of " << actualRedundancy<< ": " << redundancyMap[actualRedundancy] << " \n";
+      break;
+    case 2:
+      depthSearchRecv();
+      adjacent.clear();
+      break;
+    }
+  cntEnd=0;
+}
+
+
 
 void Master::recvControl(char * buffer)
 {
+  cout << "Esto es lo que estoy recibiendo : "<< buffer << "\n";
   string opciones(buffer);
   strcpy(buffer,opciones.c_str());
   char switchter = getOption(opciones,1);
@@ -310,8 +342,16 @@ void Master::recvControl(char * buffer)
     {
     case 'R':
       getRedundancy(opciones);
-      // cout << cntRedundancy << "\n";
-      ++cntRedundancy;
+      break;
+    case 'Q':
+      cout << "Llegando : "<<opciones << "\n";
+      updateAdjacent(opciones);
+      break;
+    case 'E':
+      cout << "Estado del cntEnd : " << cntEnd << "\n";
+      ++cntEnd;
+      if(cntEnd == cntPeers)
+        stateControl();
       break;
       // case 'E':
       //   exitAll();
@@ -325,7 +365,7 @@ void Master::recvControl(char * buffer)
 
 bool Master::recvSomething(int i)
 {
-  char buf[256];    // buffer for client data
+  char buf[100];    // buffer for client data
   int nbytes;
 
   // handle data from a client
@@ -369,11 +409,28 @@ bool Master::recvSomething(int i)
   return 1;
 }
 
-void depthSearch(int falta , map<string , int > mark , set<string>  & rpta)
+
+void Master::depthSearchRecv()
 {
-  if(falta == 1)
+  cout << "faltaQ: "<<faltaQ << "\n";
+  faltaQ--;
+  if(faltaQ <= 0)
     {
-      // if(!mark[])
+      cout << "Nodos Adyacente : " << adjacent.size()  << "\n";
+      for(auto it = adjacent.begin() ; it != adjacent.end() ; ++it)
+        cout << (*it) << " ";
+      cout << "\n";
+    }
+  else
+    {
+      string mandar = "-Q " + char(faltaQ+'0');
+      string cad;
+      for(auto it = adjacent.begin() ; it != adjacent.end() ; ++it)
+        {
+          cad = "-Q  " + (*it);
+          cout << cad << "<-- esto se mandara\n";
+          echoSomething((char*)cad.c_str());
+        }
     }
 }
 
@@ -381,6 +438,7 @@ bool Master::sendSomething()
 {
   return 1;
 }
+
 void Master::processing()
 {
   //aux variables

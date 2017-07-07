@@ -138,8 +138,7 @@ void Slave::recvEdge(string buffer)
   string fstWord,sndWord;
   fstWord = getArgument(buffer,1);
   sndWord = getArgument(buffer,2);
-  fstWord = fstWord.substr(0,fstWord.size()-1);
-  cout << fstWord << " " << sndWord << "\n";
+  // cout << fstWord << " " << sndWord << "\n";
   adjList[fstWord].insert(sndWord);
   adjList[sndWord].insert(fstWord);
 }
@@ -157,12 +156,14 @@ void Slave::printInfo()
 
 void Slave::sendRedundancy(string opciones)
 {
-  string arg = getArgument(opciones,1), stOk,stError;
+  string arg = getArgument(opciones,1), stOk,stError,stEnd;
   stOk = "-R " + arg;
   stError = "-R -1" ;
-  char bufOk[100],bufError[100];
+  stEnd = "-E ";
+  char bufOk[100],bufError[100],bufEnd[100];
   strcpy(bufOk,stOk.c_str());
   strcpy(bufError,stError.c_str());
+  strcpy(bufEnd,stEnd.c_str());
   if(adjList.count(arg))
     {
       if (send(socketfd, bufOk, 100, 0) == -1)
@@ -173,7 +174,29 @@ void Slave::sendRedundancy(string opciones)
       if (send(socketfd, bufError, 100, 0) == -1)
         perror("send\n");
     }
+  sleep(0.5);//adsadsa
+  if (send(socketfd, bufEnd, 100, 0) == -1)
+    perror("send\n");
+}
 
+
+void Slave::sendAdjacency(string pattern)
+{
+  string argument = getArgument(pattern,1);
+  string stEnd = "-E ", mandar = "-Q ";
+  // char bufEnd[100];
+  // memset(bufEnd,0,sizeof bufEnd);
+  // strcpy(bufEnd,stEnd.c_str());
+  for(auto it = adjList[argument].begin() ; it != adjList[argument].end() ; ++it)
+    {
+      string me = mandar + *(it);
+      if (send(socketfd, (char*)me.c_str(), 100, 0) == -1)
+        perror("send\n");
+      sleep(0.5);
+    }
+  cout << "Mando mi End niggi\n";
+  if (send(socketfd, (char*)stEnd.c_str(), 100, 0) == -1)
+    perror("send\n");
 }
 
 void Slave::recvSomething()
@@ -222,7 +245,7 @@ void Slave::recvSomething()
               printLines();
               break;
             case 'Q':
-
+              sendAdjacency(opciones);
               break;
             case 'R':
               sendRedundancy(opciones);

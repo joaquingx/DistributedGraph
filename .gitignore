@@ -1,3 +1,5 @@
 *.o
 *.big
 *.dat
+datos_redes/
+redes/

@@ -31,6 +31,7 @@ struct Slave
   void printEdges();
   void printInfo();
   void sendRedundancy(string opciones);
+  void sendAdjacency(string pattern);
 };
 
 

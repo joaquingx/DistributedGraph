@@ -14,8 +14,7 @@ using namespace std;
 #define MAXN 100
 #define MAXELEMENTS int(1e5+100)
 typedef unsigned char uchar;
-typedef map<string , set<string>  > bigramList;
-
+typedef map< string , set<string>  > bigramList;
 char getOption(string s, int cual);
 string getArgument(string s, int cual);
 void printBigramList(bigramList mp);

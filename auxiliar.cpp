@@ -77,6 +77,8 @@ string getArgument(string s, int cual)
   // cout << s << "\n";
   // cout << pos << "\n";
   reverse(s.begin(), s.end() );
+  if(s[s.size()-1] == 10)
+    return s.substr(s.size( )- pos, pos-1);
   return  s.substr(s.size()-pos);
 }
 
