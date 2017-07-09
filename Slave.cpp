@@ -118,11 +118,11 @@ void Slave::sendSomething()
       int idxOpcion = opciones.find("-");
       int idxArgument = opciones.find(" ");
       string argument = opciones.substr(idxArgument+1);
-      char buffer[100];
+      char buffer[MAXN];
       strcpy(buffer,argument.c_str());
       if(opciones[idxOpcion+1] == 'S') // Send Something
         {
-          if (send(socketfd, buffer, 100, 0) == -1)
+          if (send(socketfd, buffer, MAXN, 0) == -1)
             perror("send\n");
         }
       cout << "Mandado!\n";
@@ -160,22 +160,22 @@ void Slave::sendRedundancy(string opciones)
   stOk = "-R " + arg;
   stError = "-R -1" ;
   stEnd = "-E ";
-  char bufOk[100],bufError[100],bufEnd[100];
+  char bufOk[MAXN],bufError[MAXN],bufEnd[MAXN];
   strcpy(bufOk,stOk.c_str());
   strcpy(bufError,stError.c_str());
   strcpy(bufEnd,stEnd.c_str());
   if(adjList.count(arg))
     {
-      if (send(socketfd, bufOk, 100, 0) == -1)
+      if (send(socketfd, bufOk, MAXN, 0) == -1)
         perror("send\n");
     }
   else
     {
-      if (send(socketfd, bufError, 100, 0) == -1)
+      if (send(socketfd, bufError, MAXN, 0) == -1)
         perror("send\n");
     }
   sleep(0.5);//adsadsa
-  if (send(socketfd, bufEnd, 100, 0) == -1)
+  if (send(socketfd, bufEnd, MAXN, 0) == -1)
     perror("send\n");
 }
 
@@ -194,7 +194,7 @@ void Slave::sendAdjacency(string pattern)
         perror("send\n");
       sleep(0.5);
     }
-  cout << "Mando mi End niggi\n";
+  // cout << "Mando mi End niggi\n";
   if (send(socketfd, (char*)stEnd.c_str(), 100, 0) == -1)
     perror("send\n");
 }
@@ -203,10 +203,10 @@ void Slave::recvSomething()
 {
   while(1)
     {
-      char buf[256];    // buffer for client data
+      char buf[MAXN];    // buffer for client data
       int nbytes;
       // handle data from a client
-      if ((nbytes = recv(socketfd, buf, sizeof buf, 0)) <= 0) // se fue
+      if ((nbytes = recv(socketfd, buf, MAXN, 0)) <= 0) // se fue
         {
           // got error or connection closed by client
           if (nbytes == 0)
@@ -223,6 +223,7 @@ void Slave::recvSomething()
       else
         {
           string opciones(buf);
+          // cout << "lo que me llego :: "<< opciones << "\n";
           char switcher = getOption(buf,1);
           switch(switcher)
             {

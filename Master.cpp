@@ -80,6 +80,7 @@ void Master::openFile(char * path)
 
 void Master::echoSomething(char * buffer)
 {
+  // cout << "Estoy mandando esto : " << buffer  << "\n";
   for(int j = 0; j <= fdmax; j++)
     {
       // send to everyone!
@@ -89,10 +90,11 @@ void Master::echoSomething(char * buffer)
           // except the listener and ourselves
           if  (j != listener)
             {
-              if (send(j, buffer, 100, 0) == -1)
+              if (send(j, buffer, MAXN, 0) == -1)
                 {
                   perror("send");
                 }
+              sleep(0.5);
             }
         }
     }
@@ -107,7 +109,7 @@ void Master::distributeBetweenPeers(char * buffer)
 
 void Master::keepAlive()
 {
-  string kipi = "-S You are alive! Great!";
+  string kipi = "-S AlivePeerGreat!!";
   time_t secondsPast = time(NULL),secondsNow;
   while(1)
     {
@@ -119,7 +121,7 @@ void Master::keepAlive()
           echoSomething( (char*)kipi.c_str());
           cntPeers = activePeers-1;
           cout << "Keep Alive Detects " << activePeers << " stations active\n";
-          cout << "Estadod el cntEnd: " << cntEnd << "\n";
+          // cout << "Estadod el cntEnd: " << cntEnd << "\n";
         }
     }
 }
@@ -150,10 +152,15 @@ void Master::printInfo()
 }
 
 
-// void Master::printDebug()
-// {
+void Master::printDebug()
+{
+  cout << "El numero de cntPeers : " << cntPeers << "\n";
+  cout << "El numero de cntAdjancent : " << cntAdjacent << "\n";
+  cout << "cntEnd : " << cntEnd << "\n";
+  cout << "FaltaQ : " << faltaQ << "\n";
+  cout << "actualState: " << actualState <<"\n";
+}
 
-// }
 
 void Master::controlMaster()
 {
@@ -161,15 +168,16 @@ void Master::controlMaster()
   while(1)
     {
       // if(cntRedundancy == getArgument(opciones))
-      char buffer[100];
+      char buffer[MAXN];
       getline(cin,opciones);
       strcpy(buffer,opciones.c_str());
       char switchter = getOption(opciones,1);
       printLines();
       switch(switchter)
         {
-        // case '*':
-        //   printDebug();
+        case '*':
+          printDebug();
+          break;
         case 'D':
           distributeBetweenPeers(buffer);
           break;
@@ -189,6 +197,15 @@ void Master::controlMaster()
           faltaQ = int(char(getArgument(opciones,2)[0])-'0');
           adjacent.clear();
           echoSomething(buffer);
+          cntAdjacent=1;
+          break;
+        case 'O':
+          cntEnd = 0 ;
+          cntCombinations=0;
+          actualState = 3;
+          adjacent.clear();
+          echoSomething(buffer);
+          // combinations.clear();
           break;
         case 'C':
           printInfo();
@@ -311,6 +328,14 @@ void Master::updateAdjacent(string buffer)
   adjacent.insert(argument);
 }
 
+// void Master::fillCombinate()
+// {
+//   combinations[cntCombinations].clear();
+//   for(auto it = adjacent.begin() ; it != adjacent.end() ; ++it)
+//     {
+//       combinations[cntCombinations].push_back((*it));
+//     }
+// }
 
 void Master::stateControl()
 {
@@ -324,6 +349,12 @@ void Master::stateControl()
       break;
     case 2:
       depthSearchRecv();
+      cntAdjacent = int(adjacent.size());
+      adjacent.clear();
+      break;
+    case 3:
+      // fillCombinate();
+      ++cntCombinations;
       adjacent.clear();
       break;
     }
@@ -334,7 +365,7 @@ void Master::stateControl()
 
 void Master::recvControl(char * buffer)
 {
-  cout << "Esto es lo que estoy recibiendo : "<< buffer << "\n";
+  // cout << "Esto es lo que estoy recibiendo : "<< buffer << "\n";
   string opciones(buffer);
   strcpy(buffer,opciones.c_str());
   char switchter = getOption(opciones,1);
@@ -344,13 +375,18 @@ void Master::recvControl(char * buffer)
       getRedundancy(opciones);
       break;
     case 'Q':
-      cout << "Llegando : "<<opciones << "\n";
+      // cout << "Llegando : "<<opciones << "\n";
       updateAdjacent(opciones);
       break;
+    // case 'O':
+    //   updateAdjacent(opciones);
+    //   break;
     case 'E':
-      cout << "Estado del cntEnd : " << cntEnd << "\n";
+      // cout << "Estado del cntEnd : " << cntEnd << "\n";
       ++cntEnd;
-      if(cntEnd == cntPeers)
+      if(cntEnd == cntPeers and actualState == 1)
+        stateControl();
+      else if(cntEnd  == cntPeers*cntAdjacent and actualState == 2)
         stateControl();
       break;
       // case 'E':
@@ -365,7 +401,7 @@ void Master::recvControl(char * buffer)
 
 bool Master::recvSomething(int i)
 {
-  char buf[100];    // buffer for client data
+  char buf[MAXN];    // buffer for client data
   int nbytes;
 
   // handle data from a client
@@ -388,23 +424,6 @@ bool Master::recvSomething(int i)
   else
     {
       recvControl(buf);
-      // cout << buf << "\n";
-      // // we got some data from a client
-      // for(int j = 0; j <= fdmax; j++)
-      //   {
-      //     // send to everyone!
-      //     if (FD_ISSET(j, &master))
-      //       {
-      //         // except the listener and ourselves
-      //         if  (j != listener && j != i )
-      //           {
-      //             if (send(j, buf, nbytes, 0) == -1)
-      //               {
-      //                 perror("send mesg");
-      //               }
-      //           }
-      //       }
-      //   }
     }
   return 1;
 }
@@ -412,14 +431,16 @@ bool Master::recvSomething(int i)
 
 void Master::depthSearchRecv()
 {
-  cout << "faltaQ: "<<faltaQ << "\n";
+  // cout << "faltaQ: "<<faltaQ << "\n";
+
   faltaQ--;
-  if(faltaQ <= 0)
+  if(faltaQ == 0)
     {
-      cout << "Nodos Adyacente : " << adjacent.size()  << "\n";
+      cntEnd=0;
       for(auto it = adjacent.begin() ; it != adjacent.end() ; ++it)
         cout << (*it) << " ";
       cout << "\n";
+      cout << "Nodos Adyacentes : " << adjacent.size()  << "\n";
     }
   else
     {
@@ -428,7 +449,7 @@ void Master::depthSearchRecv()
       for(auto it = adjacent.begin() ; it != adjacent.end() ; ++it)
         {
           cad = "-Q  " + (*it);
-          cout << cad << "<-- esto se mandara\n";
+          // cout << cad << "<-- esto se mandara\n";
           echoSomething((char*)cad.c_str());
         }
     }

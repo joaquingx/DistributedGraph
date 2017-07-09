@@ -17,7 +17,7 @@
 struct Slave
 {
   int yes = 1 , socketfd;
-  char PORTLISTENER[100],PORTSENDER[100], IP_ADDR[100];
+  char PORTLISTENER[MAXN],PORTSENDER[MAXN], IP_ADDR[MAXN];
   bigramList adjList;
   struct sockaddr * myInfo;
   Slave(char * ipAddr,  char * portSender);
