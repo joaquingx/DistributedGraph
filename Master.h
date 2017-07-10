@@ -16,17 +16,17 @@ using namespace std;
 #define MASTER_H
 struct Master
 {
-  char PORTLISTENER[100], IP_ADDR[100];
+  char PORTLISTENER[MAXN], IP_ADDR[MAXN];
   fd_set master;    // master file descriptor list
   fd_set read_fds;  // temp file descriptor list for select()
   int fdmax;        // maximum file descriptor number
   int listener ,  newfd;
   int yes=1;
-  int cntPeers=0,activePeers=0,cntEnd=0, cntRedundancy,cntAdjacent=0, cntCombinations=0;
+  int cntPeers=0,activePeers=0,cntEnd=0, cntRedundancy,cntAdjacent=0, cntCombinations=0, getSize=0;
   int faltaQ = 0;
   int actualState=0;
   string actualRedundancy;
-  /* vector< vector < string > > combinations(MAXN); */
+  vector< vector < string > > combinations;
   map<string , int > redundancyMap;
   set<string> adjacent;
   struct sockaddr * myInfo;
@@ -54,6 +54,10 @@ struct Master
   void recvControl(char * buffer);
   void depthSearchRecv();
   void printDebug();
+  void fillCombinate();
+  void printCombinations();
+  void combinationsProcessing( string buffer);
+  void assignStation(char * buffer);
 };
 
 #endif

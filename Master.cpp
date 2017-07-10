@@ -71,7 +71,7 @@ void Master::openFile(char * path)
                       perror("send");
                     }
                 }
-              sleep(0.5); // ??? How to overcome?????
+              // sleep[(0.5); // ??? How to overcome?????
             }
         }
       fclose (pFile);
@@ -94,7 +94,7 @@ void Master::echoSomething(char * buffer)
                 {
                   perror("send");
                 }
-              sleep(0.5);
+              // sleep(0.5);
             }
         }
     }
@@ -147,7 +147,7 @@ void Master::exitAll()
 void Master::printInfo()
 {
   cout << "We have " << cntPeers << " active Peers\n";
-  getInfo((*myInfo));
+  // getInfo((*myInfo));
   getProtocol();
 }
 
@@ -161,6 +161,24 @@ void Master::printDebug()
   cout << "actualState: " << actualState <<"\n";
 }
 
+
+
+void Master::assignStation(char * buffer)
+{
+  int fstStation = fstHashFunction(rand()%10000,cntPeers)+INITIAL;
+  int sndStation = sndHashFunction(rand()%10000,cntPeers)+INITIAL;
+  if (send(fstStation, buffer , MAXN, 0) == -1)
+    {
+      perror("send");
+    }
+  if(fstStation != sndStation)
+    {
+      if (send(sndStation, buffer , MAXN, 0) == -1)
+        {
+          perror("send");
+        }
+    }
+}
 
 void Master::controlMaster()
 {
@@ -201,11 +219,15 @@ void Master::controlMaster()
           break;
         case 'O':
           cntEnd = 0 ;
-          cntCombinations=0;
+          cntCombinations = 0 ;
           actualState = 3;
           adjacent.clear();
-          echoSomething(buffer);
-          // combinations.clear();
+          combinationsProcessing(buffer);
+          combinations.clear();
+          combinations.resize(MAXN);
+          break;
+        case 'I':
+          assignStation(buffer);
           break;
         case 'C':
           printInfo();
@@ -312,6 +334,17 @@ bool Master::newConnection()
   return 1;
 }
 
+void Master::combinationsProcessing( string buffer)
+{
+  getSize = stoi(getArgument(buffer,1));
+  for(int i = 0 ;i < getSize ; ++i)
+    {
+      string toSend = "-Q " + getArgument(buffer,i+2);
+      echoSomething((char*)toSend.c_str());
+      sleep(1.5);
+    }
+}
+
 void Master::getRedundancy(string buffer)
 {
   string nodo = getArgument(buffer,1);
@@ -328,14 +361,27 @@ void Master::updateAdjacent(string buffer)
   adjacent.insert(argument);
 }
 
-// void Master::fillCombinate()
-// {
-//   combinations[cntCombinations].clear();
-//   for(auto it = adjacent.begin() ; it != adjacent.end() ; ++it)
-//     {
-//       combinations[cntCombinations].push_back((*it));
-//     }
-// }
+void Master::fillCombinate()
+{
+  combinations[cntCombinations].resize(0);
+  combinations[cntCombinations].clear();
+  for(auto it = adjacent.begin() ; it != adjacent.end() ; ++it)
+    {
+      combinations[cntCombinations].push_back((*it));
+    }
+}
+
+void Master::printCombinations()
+{
+  for(int i = getSize-1 ; i >= 0 ; --i)
+    {
+      for(int j = 0 ; j < combinations[i].size() ; ++j)
+        {
+          cout << combinations[i][j] << " ";
+        }
+      cout << "\n\n";
+    }
+}
 
 void Master::stateControl()
 {
@@ -353,14 +399,16 @@ void Master::stateControl()
       adjacent.clear();
       break;
     case 3:
-      // fillCombinate();
+      fillCombinate();
       ++cntCombinations;
+      if(cntCombinations == getSize)
+        printCombinations();
       adjacent.clear();
       break;
     }
   cntEnd=0;
+  // cntCombinations=0;
 }
-
 
 
 void Master::recvControl(char * buffer)
@@ -378,13 +426,12 @@ void Master::recvControl(char * buffer)
       // cout << "Llegando : "<<opciones << "\n";
       updateAdjacent(opciones);
       break;
-    // case 'O':
-    //   updateAdjacent(opciones);
-    //   break;
+    case 'O':
+      updateAdjacent(opciones);
+      break;
     case 'E':
-      // cout << "Estado del cntEnd : " << cntEnd << "\n";
       ++cntEnd;
-      if(cntEnd == cntPeers and actualState == 1)
+      if(cntEnd == cntPeers and actualState != 2)
         stateControl();
       else if(cntEnd  == cntPeers*cntAdjacent and actualState == 2)
         stateControl();
@@ -462,6 +509,7 @@ bool Master::sendSomething()
 
 void Master::processing()
 {
+  combinations.resize(MAXN);
   //aux variables
   int i, j, rv;
   // aux variables

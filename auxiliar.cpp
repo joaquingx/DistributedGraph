@@ -45,11 +45,14 @@ void getInfo(struct sockaddr sa)
 void getProtocol()
 {
   cout << "Usage: \n";
-  cout << "-S Argument : Echo Argument on all peers\n";
-  cout << "-D Argument : Distribute the argument among peers\n";
-  cout << "-I Argument : Insert Bigram in Graph\n";
+  cout << "-S Argumetn : Echo Argument on all peers\n";
+  cout << "-D File : Distribute the argument among peers\n";
+  cout << "-I Word1 Word2 : Insert Bigram in Graph\n";
   cout << "-P : Print Adjacency List on all peers\n";
   cout << "-C : Get this page\n";
+  cout << "-R Word : Get the Redundancy of a Word\n";
+  cout << "-Q Depth Word : Get the Redundancy of a Word\n";
+  cout << "-O Word1 ... WordN N : Get the Synonymous of the Words\n";
 }
 
 char getOption(string s, int cual)
